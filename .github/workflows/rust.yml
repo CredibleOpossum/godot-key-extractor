@@ -6,23 +6,28 @@ on:
       - "main"
 
 jobs:
-  create-tag:
-    name: "Create tag"
-    runs-on: "ubuntu-latest"
+  build:
+    runs-on: ubuntu-latest
+
     steps:
-      - name: "Check out the repo"
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Install latest rust toolchain
+        uses: actions-rs/toolchain@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          toolchain: stable
+          default: true
+          override: true
 
-      - name: "Get tag"
-        id: "get-tag"
-        shell: "bash"
-        run: |
-          echo PKG_VERSION=$(awk -F ' = ' '$1 ~ /version/ { gsub(/["]/, "", $2); printf("%s",$2) }' Cargo.toml) >> $GITHUB_OUTPUT
+      - name: Build
+        run: cargo build --all --release && strip target/release/godot-key-extractor && mv target/release/$godot-key-extractor target/release/godot-key-extractor.x86_64
 
-      - name: "Set Tag"
-        shell: "bash"
-        run: |
-          git tag v${{ steps.get-tag.outputs.PKG_VERSION }} && git push --tags
-
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            target/release/PROJECT_NAME_amd64
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

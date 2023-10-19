@@ -18,16 +18,52 @@ jobs:
       with:
         toolchain: stable
 
-    - name: Build Rust Project
+    - name: Build Linux Binary
       run: cargo build --release
 
-    - name: Release
+    - name: Setup Cross (for Windows build)
       run: |
-        # Create a release binary
-        mkdir -p release
-        cp target/release/godot_key_extractor release/godot_key_extractor
-    - name: Upload Release Artifact
+        cargo install cross
+      env:
+        CARGO_HOME: ${{ env.HOME }}/.cargo
+
+    - name: Build Windows Binary
+      run: cross build --release --target x86_64-pc-windows-gnu
+
+    - name: Create Release Directory
+      run: mkdir -p release
+
+    - name: Copy Linux Binary
+      run: cp target/release/godot_key_extractor release/godot_key_extractor
+
+    - name: Copy Windows Binary
+      run: cp target/x86_64-pc-windows-gnu/release/godot_key_extractor.exe release/godot_key_extractor.exe
+
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: release/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Release Artifacts
       uses: actions/upload-artifact@v2
       with:
         name: release
         path: release
+
+    - name: Get Release ID
+      id: get_release_id
+      run: echo "::set-output name=release_id::${{ steps.create_release.outputs.id }}"
+
+    - name: Create Git Tag
+      run: git tag -a v1.0.${{ github.run_number }} -m "Release v1.0.${{ github.run_number }}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Push Tag
+      run: git push origin v1.0.${{ github.run_number }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        

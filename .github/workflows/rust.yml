@@ -16,4 +16,4 @@ jobs:
         uses: rust-build/rust-build.action@v1.4.3
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: Release.txt
+          files: godot_key_extractor

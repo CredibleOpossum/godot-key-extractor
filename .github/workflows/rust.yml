@@ -21,7 +21,7 @@ jobs:
           override: true
 
       - name: Build
-        run: cargo build --all --release && strip target/release/godot-key-extractor && mv target/release/$godot-key-extractor target/release/godot-key-extractor.x86_64
+        run: cargo build --all --release && strip target/release/godot_key_extractor && mv target/release/godot_key_extractor target/release/godot-key-extractor.x86_64
 
       - name: Release
         uses: softprops/action-gh-release@v1

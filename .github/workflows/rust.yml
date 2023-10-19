@@ -1,33 +1,33 @@
-name: "Tag"
+name: Rust Build and Release
 
 on:
   push:
     branches:
-      - "main"
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v1
+    - name: Check Out Code
+      uses: actions/checkout@v2
 
-      - name: Install latest rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          default: true
-          override: true
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
 
-      - name: Build
-        run: cargo build --all --release && strip target/release/godot_key_extractor && mv target/release/godot_key_extractor target/release/godot-key-extractor.x86_64
+    - name: Build Rust Project
+      run: cargo build --release
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: |
-            target/release/godot_key_extractor
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Release
+      run: |
+        # Create a release binary
+        mkdir -p release
+        cp target/release/godot_key_extractor release/godot_key_extractor
+    - name: Upload Release Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: release
+        path: release
